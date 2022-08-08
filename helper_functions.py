@@ -122,3 +122,19 @@ def get_data(query, database:str):
     rows = [list(x) for x in cur.fetchall()]
     df = pd.DataFrame(rows, columns=colnames)
     return df
+
+def create_database_connection(database:str):
+    DRIVER_NAME = 'SQL SERVER'
+    SERVER_NAME = 'DESKTOP-QAJAHL9\SQLEXPRESS'
+    DATABASE_NAME = database
+    connection_string = f'''
+                        DRIVER={{{DRIVER_NAME}}};
+                        SERVER={SERVER_NAME};
+                        DATABASE={DATABASE_NAME};
+                        Trust_Connection=yes;
+                        '''
+
+    con = odbc.connect(connection_string)
+    cur = con.cursor()
+
+    return con, cur
