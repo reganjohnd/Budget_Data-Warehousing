@@ -20,18 +20,7 @@ def upload_transactions(data_file_dir:str):
     transactions.rename(columns={'Amount':'amount', 'Description':'description'}, inplace=True)
     transactions = transactions[['date_key', 'category_key', 'spending_group_key', 'account_key', 'description', 'amount']].dropna()
 
-    DRIVER_NAME = 'SQL SERVER'
-    SERVER_NAME = 'DESKTOP-QAJAHL9\SQLEXPRESS'
-    DATABASE_NAME = 'budget'
-    connection_string = f'''
-                        DRIVER={{{DRIVER_NAME}}};
-                        SERVER={SERVER_NAME};
-                        DATABASE={DATABASE_NAME};
-                        Trust_Connection=yes;
-                        '''
-
-    con = odbc.connect(connection_string)
-    cur = con.cursor()
+    con, cur = hf.create_database_connection('budget')
 
     for i, v in transactions.iterrows():
         cur.execute('INSERT INTO [dbo].[transactions_Fact] ([date_key], [category_key], [spending_group_key], [account_key], [description], [amount]) VALUES(?, ?, ?, ?, ?, ?)', v.date_key, v.category_key, v.spending_group_key, v.account_key, v.description, v.amount)
