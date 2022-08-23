@@ -118,7 +118,7 @@ def get_data(query:str, cursor_variable):
     # con = odbc.connect(connection_string)
     # cur = con.cursor()
     cursor_variable.execute(query)
-    colnames = [desc[0] for desc in cur.description]
+    colnames = [desc[0] for desc in cursor_variable.description]
     rows = [list(x) for x in cursor_variable.fetchall()]
     df = pd.DataFrame(rows, columns=colnames)
     return df

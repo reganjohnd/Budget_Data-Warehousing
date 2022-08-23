@@ -1,6 +1,13 @@
 import pandas as pd
 import pyodbc as odbc
 
+from dotenv import load_dotenv
+from pathlib import Path
+import os
+env_path = Path.home()/'.env'
+load_dotenv(dotenv_path= env_path, override=True)
+DIR = os.getenv('budget_dir')
+
 import helper_functions as hf
 
 def upload_transactions(data_file_dir:str):
@@ -10,7 +17,8 @@ def upload_transactions(data_file_dir:str):
     accounts = hf.get_data('select * from accounts_DIM', 'budget')
 
     ### update dimension tables
-    dimension_data = [categories, spending_groups, accounts]
+    con, cur = hf.create_database_connection('budget')
+
     dimension_update_variables = {'categories':{'trxs_column_name': 'Category',
                                                 'db_column_name': 'category_name',
                                                 'db_tbl_name': 'categories_DIM'},
@@ -18,23 +26,34 @@ def upload_transactions(data_file_dir:str):
                                             'db_column_name': 'spending_group_name',
                                             'db_tbl_name': 'spending_groups_DIM'},
                                 'accounts': {'trxs_column_name': 'Account',
-                                            'db_column_name': 'account_name',
+                                            'db_column_name': 'account_detail',
                                             'db_tbl_name': 'accounts_DIM'}}
 
+    dimension_data = [categories, spending_groups, accounts]
+
+    # for the respective dimension
     for i, v in enumerate(dimension_data):
+        # unique list of categories from the new transactions
         trxs_values = list(transactions[list(dimension_update_variables.values())[i].get('trxs_column_name')].unique())
+
+        # unique list of categories from the DB dimension table
         db_values = list(v[list(dimension_update_variables.values())[i].get('db_column_name')])
+
+        # extract categories that are in the new transactions but not in the DB dimension table
         values_to_add = [x for x in trxs_values if x not in db_values]
         
-        if len(values_to_add > 0):
+        print(values_to_add)
+        if len(values_to_add) > 0:
             for j, k in enumerate(values_to_add):
                 query = f'''
-                    INSERT INTO [dbo].[{list(dimension_update_variables.values())[j].get('db_tbl_name')}] ([{list(dimension_update_variables.values())[j].get('db_column_name')}]) VALUES ('{k}');
+                    INSERT INTO [dbo].[{list(dimension_update_variables.values())[i].get('db_tbl_name')}] ([{list(dimension_update_variables.values())[i].get('db_column_name')}]) VALUES ('{k}');
                     '''
                 print(query)
-        # cur.execute(query)
+                cur.execute(query)
+                cur.commit()
+                con.commit()
 
-
+    ### update transactions table
     categories = hf.get_data('select * from categories_DIM', 'budget')
     spending_groups = hf.get_data('select * from spending_groups_DIM', 'budget')
     accounts = hf.get_data('select * from accounts_DIM', 'budget')
@@ -60,4 +79,6 @@ def upload_transactions(data_file_dir:str):
     con.commit()
     cur.close()
 
-upload_transactions(r'G:\My Drive\DANIELS ECOSYSTEM\extracurricularActivities\DataScience\Projects\budget_warehouse')
+    con.close()
+
+upload_transactions(DIR)
