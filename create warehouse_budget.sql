@@ -57,9 +57,9 @@ create accounts table
 
 CREATE TABLE [accounts_DIM](
 	[account_key] INT IDENTITY(1, 1) NOT NULL,
-	[account_name] VARCHAR(50) NOT NULL,
+	[account_name] VARCHAR(50) NULL,
 	[account_detail] VARCHAR(50) NOT NULL,
-	[is_active] TINYINT NOT NULL,
+	[is_active] TINYINT NULL,
 	PRIMARY KEY ([account_key])
 );
 

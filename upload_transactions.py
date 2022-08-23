@@ -35,13 +35,20 @@ def upload_transactions(data_file_dir:str):
         # cur.execute(query)
 
 
+    categories = hf.get_data('select * from categories_DIM', 'budget')
+    spending_groups = hf.get_data('select * from spending_groups_DIM', 'budget')
+    accounts = hf.get_data('select * from accounts_DIM', 'budget')
+
     spending_group_mapping = dict(spending_groups.iloc[:, [1, 0]].values)
     category_mapping = dict(categories.iloc[:, [1, 0]].values)
     account_mapping = dict(accounts.iloc[:, [2, 0]].values)
+
     transactions['spending_group_key'] = transactions['Spending Group'].map(spending_group_mapping)
     transactions['category_key'] = transactions['Category'].map(category_mapping)
     transactions['account_key'] = transactions['Account'].map(account_mapping)
+
     transactions['date_key'] = [x.replace('/', '') for x in transactions['Date']]
+    
     transactions.rename(columns={'Amount':'amount', 'Description':'description'}, inplace=True)
     transactions = transactions[['date_key', 'category_key', 'spending_group_key', 'account_key', 'description', 'amount']].dropna()
 

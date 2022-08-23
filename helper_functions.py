@@ -102,24 +102,24 @@ def df_from_s3(file_name: str, bucket: str, access_key_id:str, private_access_ke
 
     return pd.read_csv(filepath_or_buffer=io.StringIO(csv_object), sep=';')
 
-def get_data(query, database:str):
+def get_data(query:str, cursor_variable):
 
-    query = query
-    DRIVER_NAME = 'SQL SERVER'
-    SERVER_NAME = 'DESKTOP-QAJAHL9\SQLEXPRESS'
-    DATABASE_NAME = database
-    connection_string = f'''
-                        DRIVER={{{DRIVER_NAME}}};
-                        SERVER={SERVER_NAME};
-                        DATABASE={DATABASE_NAME};
-                        Trust_Connection=yes;
-                        '''
+    # query = query
+    # DRIVER_NAME = 'SQL SERVER'
+    # SERVER_NAME = 'DESKTOP-QAJAHL9\SQLEXPRESS'
+    # DATABASE_NAME = database
+    # connection_string = f'''
+    #                     DRIVER={{{DRIVER_NAME}}};
+    #                     SERVER={SERVER_NAME};
+    #                     DATABASE={DATABASE_NAME};
+    #                     Trust_Connection=yes;
+    #                     '''
 
-    con = odbc.connect(connection_string)
-    cur = con.cursor()
-    cur.execute(query)
+    # con = odbc.connect(connection_string)
+    # cur = con.cursor()
+    cursor_variable.execute(query)
     colnames = [desc[0] for desc in cur.description]
-    rows = [list(x) for x in cur.fetchall()]
+    rows = [list(x) for x in cursor_variable.fetchall()]
     df = pd.DataFrame(rows, columns=colnames)
     return df
 
