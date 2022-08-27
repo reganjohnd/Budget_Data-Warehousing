@@ -11,13 +11,15 @@ DIR = os.getenv('budget_dir')
 import helper_functions as hf
 
 def upload_transactions(data_file_dir:str):
+    con, cur = hf.create_database_connection('budget')
+
     transactions = pd.read_csv(hf.create_dir(data_file_dir, 'transactions.csv'))
-    categories = hf.get_data('select * from categories_DIM', 'budget')
-    spending_groups = hf.get_data('select * from spending_groups_DIM', 'budget')
-    accounts = hf.get_data('select * from accounts_DIM', 'budget')
+    categories = hf.get_data('select * from categories_DIM', cur)
+    spending_groups = hf.get_data('select * from spending_groups_DIM', cur)
+    accounts = hf.get_data('select * from accounts_DIM', cur)
 
     ### update dimension tables
-    con, cur = hf.create_database_connection('budget')
+    
 
     dimension_update_variables = {'categories':{'trxs_column_name': 'Category',
                                                 'db_column_name': 'category_name',
@@ -42,7 +44,6 @@ def upload_transactions(data_file_dir:str):
         # extract categories that are in the new transactions but not in the DB dimension table
         values_to_add = [x for x in trxs_values if x not in db_values]
         
-        print(values_to_add)
         if len(values_to_add) > 0:
             for j, k in enumerate(values_to_add):
                 query = f'''
@@ -54,9 +55,9 @@ def upload_transactions(data_file_dir:str):
                 con.commit()
 
     ### update transactions table
-    categories = hf.get_data('select * from categories_DIM', 'budget')
-    spending_groups = hf.get_data('select * from spending_groups_DIM', 'budget')
-    accounts = hf.get_data('select * from accounts_DIM', 'budget')
+    categories = hf.get_data('select * from categories_DIM', cur)
+    spending_groups = hf.get_data('select * from spending_groups_DIM', cur)
+    accounts = hf.get_data('select * from accounts_DIM', cur)
 
     spending_group_mapping = dict(spending_groups.iloc[:, [1, 0]].values)
     category_mapping = dict(categories.iloc[:, [1, 0]].values)
@@ -71,14 +72,12 @@ def upload_transactions(data_file_dir:str):
     transactions.rename(columns={'Amount':'amount', 'Description':'description'}, inplace=True)
     transactions = transactions[['date_key', 'category_key', 'spending_group_key', 'account_key', 'description', 'amount']].dropna()
 
-    con, cur = hf.create_database_connection('budget')
-
     for i, v in transactions.iterrows():
         cur.execute('INSERT INTO [dbo].[transactions_Fact] ([date_key], [category_key], [spending_group_key], [account_key], [description], [amount]) VALUES(?, ?, ?, ?, ?, ?)', v.date_key, v.category_key, v.spending_group_key, v.account_key, v.description, v.amount)
-    cur.commit()
-    con.commit()
-    cur.close()
+        cur.commit()
+        con.commit()
 
+    cur.close()
     con.close()
 
 upload_transactions(DIR)
