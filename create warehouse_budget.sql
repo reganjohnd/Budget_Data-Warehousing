@@ -1,3 +1,4 @@
+-- create dates dimension table
 CREATE TABLE [Date_DIM](
 	[date_key] int NOT NULL,
 	[full_date] date NULL,
