@@ -54,7 +54,7 @@ WITH
 )
 GO
 
-create accounts table
+--create accounts table
 
 CREATE TABLE [accounts_DIM](
 	[account_key] INT IDENTITY(1, 1) NOT NULL,
